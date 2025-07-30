@@ -118,12 +118,12 @@ def step_3_final_confirmation():
     """Step 3: Conferma finale"""
     st.markdown("## 💳 Conferma per vedere se hai vinto il buono Amazon")
     
-    st.info("📧 Inserisci la tua email per ricevere l'eventuale buono Amazon")
+    st.info("📧 Inserisci la tua email per ricevere l'eventuale buono")
     
     # Email richiesta ma NON salvata (solo per l'effetto della demo)
     email_input = st.text_input("Email:")
     
-    st.success("🎉 Hai vinto! Il tuo buono Amazon da 10€ è stato inviato, potrebbe volerci qualche minuto, prosegui per maggiori dettagli.")
+    st.success("Prosegui per vedere se hai vinto.")
     
     # Progress bar
     create_progress_bar(3)
