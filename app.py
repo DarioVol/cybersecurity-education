@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""
-Cybersecurity Education - Streamlit App Main
-App atomica che utilizza le funzioni di cybersecurity_utils.py
-"""
-
 import streamlit as st
 from datetime import datetime
 from cybersecurity_utils import (
@@ -21,8 +16,7 @@ from cybersecurity_utils import (
     create_data_download,
     display_collected_data,
     reset_session,
-    load_custom_css,
-    show_detailed_debug  # Debug dettagliato per trovare health check
+    load_custom_css
     # emergency_cleanup_sheet  # DECOMMENTARE PER PULIZIA UNA-TANTUM DEL SHEET
 )
 
@@ -232,8 +226,8 @@ def main():
     # Inizializzazione session state
     initialize_session_state()
     
-    # Tracking apertura pagina con DEBUG DETTAGLIATO INTEGRATO
-    # (Il debug è ora interno alla funzione track_page_opening)
+    # Tracking apertura pagina con FILTRO ANTI-HEALTH CHECK FINALE
+    # (Il debug finale è integrato nella funzione se DEBUG_MODE=true)
     track_page_opening()
     
     # DECOMMENTARE LA RIGA SOTTO PER PULIZIA UNA-TANTUM DEL GOOGLE SHEET ROVINATO
