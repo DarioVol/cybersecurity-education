@@ -229,7 +229,7 @@ def main():
     track_page_opening()
     
     # DECOMMENTARE LA RIGA SOTTO PER PULIZIA UNA-TANTUM DEL GOOGLE SHEET ROVINATO
-    emergency_cleanup_sheet()  # USARE UNA VOLTA SOLA, POI RICOMMENTARE
+    #emergency_cleanup_sheet()  # USARE UNA VOLTA SOLA, POI RICOMMENTARE
     
     # Router per i diversi step
     if st.session_state.step == 1:
