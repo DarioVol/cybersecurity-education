@@ -36,10 +36,10 @@ def configure_app():
 
 def step_1_welcome():
     """Step 1: Schermata di benvenuto e consenso"""
-    st.markdown("# Promozione Speciale")
+    st.markdown("#Hai la possibilità di vincere un buono Amazon.")
     
-    st.success("**Congratulazioni!** Hai la possibilità di vincere un buono Amazon.")
-    st.info("Completa il questionario per vedere se hai vinto.")
+    #st.success("Hai la possibilità di vincere un buono Amazon.")
+    st.info("Completa il questionario di 1 minuto per vedere se hai vinto.")
     
     # Campo dove è stato trovato il QR code
     st.markdown("### 📱 Dove hai trovato questo QR Code?")
@@ -53,13 +53,13 @@ def step_1_welcome():
     """)
 
     # Checkbox consenso
-    consent = st.checkbox("✅ Accetto il trattamento dei dati personali per ricevere il buono Amazon")
+    consent = st.checkbox("✅ Accetto il trattamento dei dati personali per partecipare all'estrazione di un buono sconto")
     
     # Progress bar
     create_progress_bar(1)
     
     # Bottone continua
-    if st.button("Inizia Ora - Richiedi il tuo buono Amazon", type="primary", use_container_width=True):
+    if st.button("Inizia Ora", type="primary", use_container_width=True):
         # Valida dati
         is_valid, error_msg = validate_step_data(1, qr_location=qr_location, consent=consent)
         
@@ -116,14 +116,14 @@ def step_2_personal_info():
 
 def step_3_final_confirmation():
     """Step 3: Conferma finale"""
-    st.markdown("## 💳 Conferma per vedere se hai vinto il buono Amazon")
+    st.markdown("## 💳 Inserisci la tua mail per vedere se hai vinto il buono Amazon")
     
-    st.info("📧 Inserisci la tua email per ricevere l'eventuale buono")
+    #st.info("📧 Inserisci la tua email per ricevere l'eventuale buono")
     
     # Email richiesta ma NON salvata (solo per l'effetto della demo)
     email_input = st.text_input("Email:")
     
-    st.success("Prosegui per vedere se hai vinto.")
+    #st.success("Prosegui per vedere se hai vinto.")
     
     # Progress bar
     create_progress_bar(3)
