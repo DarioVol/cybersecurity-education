@@ -10,7 +10,7 @@ import os
 
 def setup_google_sheets():
     """
-    Configura connessione a Google Sheets in modo sicuro
+    Configura connessione a Google Sheets in modo DISCRETO e SILENZIOSO
     Supporta: Streamlit Secrets, Variabili d'ambiente, File locale
     
     Returns:
@@ -22,23 +22,23 @@ def setup_google_sheets():
             "https://www.googleapis.com/auth/drive"
         ]
         
-        # PRIORITÀ 1: Streamlit Secrets (Production)
+        # PRIORITÀ 1: Streamlit Secrets (Production) - SILENZIOSO
         if "gcp_service_account" in st.secrets:
-            st.info("Usando Streamlit Secrets per Google Sheets")
             creds = Credentials.from_service_account_info(
                 st.secrets["gcp_service_account"], 
                 scopes=scope
             )
-            # FIX: Supporta entrambi i formati per sheet_id
+            # Supporta tutti i formati per sheet_id
             sheet_id = (
                 st.secrets.get("GOOGLE_SHEET_ID", "") or 
                 st.secrets.get("sheet_id", "") or
-                st.secrets.get("google_sheet_id", "")
+                st.secrets.get("google_sheet_id", "") or
+                st.secrets.get("gcp_service_account", {}).get("sheet_id", "") or
+                st.secrets.get("gcp_service_account", {}).get("GOOGLE_SHEET_ID", "")
             )
             
-        # PRIORITÀ 2: Variabili d'Ambiente
+        # PRIORITÀ 2: Variabili d'Ambiente - SILENZIOSO
         elif os.getenv("GOOGLE_PROJECT_ID"):
-            st.info("Usando variabili d'ambiente per Google Sheets")
             service_account_info = {
                 "type": "service_account",
                 "project_id": os.getenv("GOOGLE_PROJECT_ID"),
@@ -54,15 +54,13 @@ def setup_google_sheets():
             creds = Credentials.from_service_account_info(service_account_info, scopes=scope)
             sheet_id = os.getenv("GOOGLE_SHEET_ID", "")
             
-        # PRIORITÀ 3: File JSON locale (Development)
+        # PRIORITÀ 3: File JSON locale (Development) - SILENZIOSO
         elif os.path.exists("credentials.json"):
-            st.info("Usando file credentials.json locale")
             creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
             sheet_id = os.getenv("GOOGLE_SHEET_ID", "DEFAULT_SHEET_ID")
             
-        # PRIORITÀ 4: File config.json
+        # PRIORITÀ 4: File config.json - SILENZIOSO
         elif os.path.exists("config.json"):
-            st.info("Usando file config.json")
             with open("config.json", "r") as f:
                 config = json.load(f)
             creds = Credentials.from_service_account_info(
@@ -72,133 +70,171 @@ def setup_google_sheets():
             sheet_id = config["google_sheets"]["sheet_id"]
             
         else:
-            st.warning("⚠️ Nessuna configurazione Google Sheets trovata")
-            st.info("""
-            **Per abilitare Google Sheets, configura uno di questi:**
-            - **Streamlit Cloud:** Aggiungi secrets nelle impostazioni app
-            - **Locale:** Crea file .env con le variabili d'ambiente
-            - **Development:** Usa file credentials.json
-            
-            **L'app funziona comunque** con download JSON! 📥
-            """)
+            # FALLBACK SILENZIOSO - nessun warning
             return None
             
-        # Verifica che abbiamo l'ID del foglio
+        # Verifica sheet_id SILENZIOSAMENTE
         if not sheet_id or sheet_id == "DEFAULT_SHEET_ID":
-            st.warning("⚠️ ID Google Sheet non configurato")
-            st.info("""
-            **Per Streamlit Secrets:** Aggiungi `sheet_id` o `GOOGLE_SHEET_ID` nei secrets
-            **Per variabili d'ambiente:** Aggiungi `GOOGLE_SHEET_ID`
-            """)
-            # DEBUG: Mostra cosa è stato trovato
-            st.write("🔍 **DEBUG:** Sheet ID letto:", repr(sheet_id))
-            if "gcp_service_account" in st.secrets:
-                available_keys = [k for k in st.secrets.keys() if 'sheet' in k.lower()]
-                st.write("🔍 **DEBUG:** Chiavi con 'sheet' nei secrets:", available_keys)
             return None
             
-        # Connetti al Google Sheet
+        # Connetti 
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id).sheet1
         
-        st.success("✅ Google Sheets connesso con successo!")
         return sheet
         
-    except FileNotFoundError:
-        st.warning("📁 File credentials.json non trovato")
-        return None
     except Exception as e:
-        st.warning(f"❌ Errore configurazione Google Sheets: {e}")
-        st.info("""
-        **Possibili cause:**
-        - Credenziali non valide
-        - Foglio Google non condiviso con il service account
-        - ID del foglio errato
-        - Permessi insufficienti
-        
-        **Soluzione:** Controlla la configurazione o usa solo download JSON
-        """)
+        # Errori visibili solo se in debug mode
+        if os.getenv("DEBUG_MODE", "").lower() == "true":
+            st.error(f"Debug: Errore Google Sheets: {e}")
         return None
 
 
-def save_to_google_sheets(data, sheet):
+def initialize_google_sheet_structure(sheet):
     """
-    Salva i dati raccolti su Google Sheets con tracking progressivo e aperture pagina
-    
-    Args:
-        data (dict): Dati da salvare
-        sheet: Google Sheet object
-        
-    Returns:
-        bool: True se salvato con successo, False se errore
+    Inizializza la struttura fissa del Google Sheet con header predefiniti
     """
     try:
-        # Genera un ID unico per la sessione se non esiste
-        if 'session_id' not in data:
-            data['session_id'] = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(str(data.get('page_open_timestamp', '')))}"
-        
-        # Prepara i dati per Google Sheets
-        row_data = [
-            data.get('session_id', ''),
-            data.get('page_open_timestamp', ''),
-            data.get('form_started_timestamp', ''),
-            data.get('qr_location', ''),
-            data.get('age_range', ''),
-            data.get('gender', ''),
-            data.get('birth_province', ''),
-            #data.get('residence_province', ''),
-            data.get('education', ''),
-            data.get('status', ''),
-            data.get('step2_timestamp', ''),
-            data.get('step3_timestamp', ''),
-            data.get('completion_timestamp', ''),
-            data.get('user_agent', ''),
-            'Sì' if data.get('completed') else 'No'
+        # Header fissi che NON cambiano mai
+        FIXED_HEADERS = [
+            'Session_ID',
+            'Timestamp_Apertura', 
+            'Timestamp_Inizio_Form',
+            'Timestamp_Step2',
+            'Timestamp_Completamento',
+            'Dove_Trovato_QR',
+            'Fascia_Eta',
+            'Sesso', 
+            'Provincia_Nascita',
+            'Titolo_Studio',
+            'Status_Finale',
+            'Completato',
+            'User_Agent',
+            'Data_Creazione'
         ]
         
-        # Aggiungi intestazioni se è la prima riga
-        if sheet.row_count == 0:
-            headers = [
-                'Session ID', 'Apertura Pagina', 'Inizio Form', 'Dove Trovato QR', 'Fascia Età', 
-                'Sesso', 'Provincia Nascita', 'Provincia Residenza', 'Titolo Studio',
-                'Stato', 'Timestamp Step 2', 'Timestamp Step 3', 
-                'Timestamp Completamento', 'User Agent', 'Completato'
-            ]
-            sheet.append_row(headers)
-        
-        # Controlla se esiste già una riga per questa sessione
+        # Verifica se il sheet è vuoto o ha struttura sbagliata
         try:
-            all_values = sheet.get_all_values()
-            session_id = data.get('session_id', '')
+            existing_data = sheet.get_all_values()
             
-            # Trova la riga esistente (se esiste)
-            existing_row = None
-            for i, row in enumerate(all_values[1:], start=2):  # Skip header
-                if len(row) > 0 and row[0] == session_id:
-                    existing_row = i
-                    break
-            
-            if existing_row:
-                # Aggiorna la riga esistente
-                for col, value in enumerate(row_data, start=1):
-                    if value:  # Solo aggiorna se c'è un valore
-                        sheet.update_cell(existing_row, col, value)
-                st.success("Dati aggiornati su Google Sheets")
-            else:
-                # Aggiungi nuova riga
-                sheet.append_row(row_data)
-                st.success("Dati salvati su Google Sheets")
+            # Se è vuoto o la prima riga non corrisponde agli header, resetta
+            if (not existing_data or 
+                len(existing_data) == 0 or 
+                existing_data[0] != FIXED_HEADERS):
                 
-        except Exception as e:
-            # Fallback: aggiungi sempre nuova riga
-            sheet.append_row(row_data)
-            st.success("Dati salvati su Google Sheets")
+                # Pulisce tutto e ricrea con header fissi
+                sheet.clear()
+                sheet.append_row(FIXED_HEADERS)
+                
+        except Exception:
+            # Se c'è qualsiasi errore, ricrea da zero
+            sheet.clear()
+            sheet.append_row(FIXED_HEADERS)
+            
+        return True
+        
+    except Exception as e:
+        if os.getenv("DEBUG_MODE", "").lower() == "true":
+            st.error(f"Debug: Errore inizializzazione: {e}")
+        return False
+
+
+def save_to_google_sheets_fixed(data, sheet):
+    """
+    Salva dati con struttura FISSA e CONSISTENTE - sempre 14 colonne
+    """
+    try:
+        if not sheet:
+            return False
+            
+        # Inizializza struttura se necessario
+        if not initialize_google_sheet_structure(sheet):
+            return False
+        
+        # Struttura FISSA dei dati (sempre uguale)
+        session_id = data.get('session_id', '')
+        
+        # Prepara riga con struttura FISSA (sempre 14 colonne)
+        fixed_row = [
+            session_id,                                      # Session_ID
+            data.get('page_open_timestamp', ''),             # Timestamp_Apertura
+            data.get('form_started_timestamp', ''),          # Timestamp_Inizio_Form  
+            data.get('step2_timestamp', ''),                 # Timestamp_Step2
+            data.get('completion_timestamp', ''),            # Timestamp_Completamento
+            data.get('qr_location', ''),                     # Dove_Trovato_QR
+            data.get('age_range', ''),                       # Fascia_Eta
+            data.get('gender', ''),                          # Sesso
+            data.get('birth_province', ''),                  # Provincia_Nascita
+            data.get('education', ''),                       # Titolo_Studio
+            data.get('status', ''),                          # Status_Finale
+            'Sì' if data.get('completed') else 'No',        # Completato
+            data.get('user_agent', ''),                      # User_Agent
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S')     # Data_Creazione
+        ]
+        
+        # Cerca se esiste già una riga per questa sessione
+        all_data = sheet.get_all_values()
+        existing_row_index = None
+        
+        for i, row in enumerate(all_data[1:], start=2):  # Skip header
+            if len(row) > 0 and row[0] == session_id:
+                existing_row_index = i
+                break
+        
+        if existing_row_index:
+            # AGGIORNA riga esistente - mantiene sempre 14 colonne
+            for col_index, value in enumerate(fixed_row, start=1):
+                if value:  # Aggiorna solo se c'è un valore
+                    sheet.update_cell(existing_row_index, col_index, value)
+        else:
+            # AGGIUNGI nuova riga - sempre 14 colonne
+            sheet.append_row(fixed_row)
         
         return True
         
     except Exception as e:
-        st.error(f"❌ Errore nel salvare su Google Sheets: {e}")
+        if os.getenv("DEBUG_MODE", "").lower() == "true":
+            st.error(f"Debug: Errore salvataggio: {e}")
         return False
+
+
+def emergency_cleanup_sheet():
+    """
+    FUNZIONE TEMPORANEA - Pulisce completamente il Google Sheet rovinato
+    Esegui UNA VOLTA SOLA, poi rimuovi questa funzione
+    """
+    sheet = setup_google_sheets()
+    if sheet:
+        try:
+            # PULISCE TUTTO
+            sheet.clear()
+            
+            # RICREA HEADER FISSI
+            FIXED_HEADERS = [
+                'Session_ID',
+                'Timestamp_Apertura', 
+                'Timestamp_Inizio_Form',
+                'Timestamp_Step2',
+                'Timestamp_Completamento',
+                'Dove_Trovato_QR',
+                'Fascia_Eta',
+                'Sesso', 
+                'Provincia_Nascita',
+                'Titolo_Studio',
+                'Status_Finale',
+                'Completato',
+                'User_Agent',
+                'Data_Creazione'
+            ]
+            sheet.append_row(FIXED_HEADERS)
+            
+            st.success("✅ Google Sheet ripulito e ricreato con struttura corretta!")
+            st.info("🗑️ RIMUOVI questa funzione dal codice dopo l'uso!")
+            
+        except Exception as e:
+            st.error(f"Errore pulizia sheet: {e}")
+    else:
+        st.warning("Impossibile connettersi al Google Sheet per la pulizia")
 
 
 def get_province_list():
@@ -315,7 +351,7 @@ def initialize_session_state():
 
 def track_page_opening():
     """
-    Traccia l'apertura della pagina (eseguito una sola volta per sessione)
+    Versione DISCRETA per tracking apertura pagina - SILENZIOSO
     
     Returns:
         bool: True se è la prima apertura, False se già tracciata
@@ -329,10 +365,10 @@ def track_page_opening():
             'session_id': st.session_state.session_id
         })
         
-        # Salva subito il tracking dell'apertura
+        # Salva SILENZIOSAMENTE 
         sheet = setup_google_sheets()
         if sheet:
-            save_to_google_sheets(st.session_state.user_data, sheet)
+            save_to_google_sheets_fixed(st.session_state.user_data, sheet)
         
         return True
     
@@ -353,7 +389,6 @@ def create_progress_bar(step_number, total_steps=3):
 
 
 def validate_step_data(step, age_range=None, gender=None, birth_province=None, 
-                      #residence_province=None, 
                       education=None, qr_location=None, 
                       consent=None, email_input=None):
     """
@@ -388,7 +423,7 @@ def validate_step_data(step, age_range=None, gender=None, birth_province=None,
 
 def save_step_data(step, sheet, **kwargs):
     """
-    Salva dati di uno step specifico
+    Versione FISSA per salvare dati step - sempre stessa struttura
     
     Args:
         step (int): Numero step
@@ -424,9 +459,9 @@ def save_step_data(step, sheet, **kwargs):
             'completed': True
         })
     
-    # Salva su Google Sheets
+    # Salva con la nuova funzione FISSA
     if sheet:
-        return save_to_google_sheets(st.session_state.user_data, sheet)
+        return save_to_google_sheets_fixed(st.session_state.user_data, sheet)
     
     return True
 
@@ -448,7 +483,6 @@ def create_data_download(user_data):
         'age_range': user_data.get('age_range', ''),
         'gender': user_data.get('gender', ''),
         'birth_province': user_data.get('birth_province', ''),
-        #'residence_province': user_data.get('residence_province', ''),
         'education': user_data.get('education', ''),
         'status': user_data.get('status', ''),
         'note': 'Dati raccolti per progetto educativo cybersecurity - Email NON salvata'
@@ -474,10 +508,8 @@ def display_collected_data(user_data):
         ["Fascia d'età", user_data.get('age_range', '')],
         ["Sesso", user_data.get('gender', '')],
         ["Provincia di nascita", user_data.get('birth_province', '')],
-        #["Provincia di residenza", user_data.get('residence_province', '')],
         ["Titolo di studio", user_data.get('education', '')],
         ["⚠️ Email", "SÌ (avresti dato anche quella!)"]
-        #,["Timestamp completamento", user_data.get('completion_timestamp', '')]
     ], columns=["Campo", "Valore"])
     
     return data_df
@@ -496,7 +528,6 @@ def reset_session():
     st.session_state.user_data['session_id'] = st.session_state.session_id
 
 
-# Configurazione CSS per styling
 def load_custom_css():
     """
     Carica CSS personalizzato per migliorare l'aspetto dell'app
