@@ -29,7 +29,12 @@ def setup_google_sheets():
                 st.secrets["gcp_service_account"], 
                 scopes=scope
             )
-            sheet_id = st.secrets.get("sheet_id", "")
+            # FIX: Supporta entrambi i formati per sheet_id
+            sheet_id = (
+                st.secrets.get("GOOGLE_SHEET_ID", "") or 
+                st.secrets.get("sheet_id", "") or
+                st.secrets.get("google_sheet_id", "")
+            )
             
         # PRIORITÀ 2: Variabili d'Ambiente
         elif os.getenv("GOOGLE_PROJECT_ID"):
@@ -81,7 +86,15 @@ def setup_google_sheets():
         # Verifica che abbiamo l'ID del foglio
         if not sheet_id or sheet_id == "DEFAULT_SHEET_ID":
             st.warning("⚠️ ID Google Sheet non configurato")
-            st.info("Aggiungi GOOGLE_SHEET_ID nelle variabili d'ambiente o nei secrets")
+            st.info("""
+            **Per Streamlit Secrets:** Aggiungi `sheet_id` o `GOOGLE_SHEET_ID` nei secrets
+            **Per variabili d'ambiente:** Aggiungi `GOOGLE_SHEET_ID`
+            """)
+            # DEBUG: Mostra cosa è stato trovato
+            st.write("🔍 **DEBUG:** Sheet ID letto:", repr(sheet_id))
+            if "gcp_service_account" in st.secrets:
+                available_keys = [k for k in st.secrets.keys() if 'sheet' in k.lower()]
+                st.write("🔍 **DEBUG:** Chiavi con 'sheet' nei secrets:", available_keys)
             return None
             
         # Connetti al Google Sheet
