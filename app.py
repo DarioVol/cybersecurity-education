@@ -16,8 +16,9 @@ from cybersecurity_utils import (
     create_data_download,
     display_collected_data,
     reset_session,
-    load_custom_css
-    #,emergency_cleanup_sheet  # DECOMMENTARE PER PULIZIA UNA-TANTUM DEL FOGLIO
+    load_custom_css,
+    debug_visit_info  # Per debug opzionale
+    # emergency_cleanup_sheet  # DECOMMENTARE PER PULIZIA UNA-TANTUM DEL SHEET
 )
 
 
@@ -197,7 +198,8 @@ def step_4_educational_disclaimer():
     - **Punto di abbandono:** dove esci se non completi
     - **Dati demografici:** solo se procedi nel questionario
     - **Email richiesta ma NON salvata** (solo per l'effetto demo)
-    - Dati anonimi utilizzati per statistiche 
+    - Dati anonimi utilizzati per statistiche educative
+    - Cancellazione automatica dopo 30 giorni
     
     **🎯 Lezione fondamentale:** Anche solo APRIRE un link sospetto può essere pericoloso!
     """)
@@ -225,11 +227,14 @@ def main():
     # Inizializzazione session state
     initialize_session_state()
     
-    # Tracking apertura pagina (solo prima volta) - SILENZIOSO
+    # DEBUG OPZIONALE - mostra info sulla visita (solo se DEBUG_MODE=true)
+    debug_visit_info()
+    
+    # Tracking apertura pagina (solo prima volta) - SILENZIOSO e FILTRATO
     track_page_opening()
     
     # DECOMMENTARE LA RIGA SOTTO PER PULIZIA UNA-TANTUM DEL GOOGLE SHEET ROVINATO
-    #emergency_cleanup_sheet()  # USARE UNA VOLTA SOLA, POI RICOMMENTARE
+    # emergency_cleanup_sheet()  # USARE UNA VOLTA SOLA, POI RICOMMENTARE
     
     # Router per i diversi step
     if st.session_state.step == 1:
