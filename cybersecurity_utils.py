@@ -381,16 +381,13 @@ def should_track_visit():
     Returns:
         bool: True se dovrebbe essere tracciata, False se ignorata
     """
-    # Non tracciare bot o health check
-    if is_bot_or_health_check():
-        return False
+    user_agent = st.context.headers.get('user-agent', 'Unknown')
     
-    # Non tracciare accessi troppo frequenti
-    if is_frequent_visitor():
-        return False
-    
-    # Se arriviamo qui, è probabilmente un utente reale
-    return True
+    # Se User-Agent è 'Unknown', è un health check automatico
+    if user_agent == 'Unknown':
+        return False  # Non tracciare
+        
+    return True  # traccia
 
 
 def track_page_opening():
