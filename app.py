@@ -17,7 +17,7 @@ from cybersecurity_utils import (
     display_collected_data,
     reset_session,
     load_custom_css
-    ,emergency_cleanup_sheet  # DECOMMENTARE PER PULIZIA UNA-TANTUM DEL FOGLIO
+    #,emergency_cleanup_sheet  # DECOMMENTARE PER PULIZIA UNA-TANTUM DEL FOGLIO
 )
 
 
