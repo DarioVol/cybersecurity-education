@@ -38,8 +38,8 @@ def step_1_welcome():
     """Step 1: Schermata di benvenuto e consenso"""
     st.markdown("# Promozione Speciale")
     
-    st.success("**Congratulazioni!** Hai accesso a un buono Amazon.")
-    st.info("Completa il questionario per il tuo codice sconto.")
+    st.success("**Congratulazioni!** Hai la possibilità di vincere un buono Amazon.")
+    st.info("Completa il questionario per vedere se hai vinto.")
     
     # Campo dove è stato trovato il QR code
     st.markdown("### 📱 Dove hai trovato questo QR Code?")
@@ -116,20 +116,20 @@ def step_2_personal_info():
 
 def step_3_final_confirmation():
     """Step 3: Conferma finale"""
-    st.markdown("## 💳 Conferma per ricevere il buono Amazon")
+    st.markdown("## 💳 Conferma per vedere se hai vinto il buono Amazon")
     
-    st.info("📧 Inserisci la tua email per ricevere il buono Amazon")
+    st.info("📧 Inserisci la tua email per ricevere l'eventuale buono Amazon")
     
     # Email richiesta ma NON salvata (solo per l'effetto della demo)
-    email_input = st.text_input("Email (per ricevere il buono Amazon):")
+    email_input = st.text_input("Email:")
     
-    st.success("🎉 Perfetto! Il tuo buono Amazon sta per essere inviato, potrebbe volerci qualche minuto.")
+    st.success("🎉 Hai vinto! Il tuo buono Amazon da 10€ è stato inviato, potrebbe volerci qualche minuto, prosegui per maggiori dettagli.")
     
     # Progress bar
     create_progress_bar(3)
     
     # Bottone finale
-    if st.button("🎯 Attiva codice", type="primary", use_container_width=True):
+    if st.button("Continua", type="primary", use_container_width=True):
         # Valida email
         is_valid, error_msg = validate_step_data(3, email_input=email_input)
         
@@ -197,11 +197,12 @@ def step_4_educational_disclaimer():
     - **Punto di abbandono:** dove esci se non completi
     - **Dati demografici:** solo se procedi nel questionario
     - **Email richiesta ma NON salvata** (solo per l'effetto demo)
-    - Dati anonimi utilizzati per statistiche educative
-    - Cancellazione automatica dopo 30 giorni
+    - Dati anonimi utilizzati per statistiche
     
     **🎯 Lezione fondamentale:** Anche solo APRIRE un link sospetto può essere pericoloso!
     """)
+
+    st.markdown("**Progetto Educativo di Cybersicurezza** - Utilizzato esclusivamente per scopi didattici")
     
     # Download dei dati
     json_data = create_data_download(st.session_state.user_data)
@@ -245,7 +246,7 @@ def main():
     
     # Footer informativo
     st.markdown("---")
-    st.markdown("**Progetto Educativo di Cybersicurezza** - Utilizzato esclusivamente per scopi didattici")
+    #st.markdown("**Progetto Educativo di Cybersicurezza** - Utilizzato esclusivamente per scopi didattici")
 
 
 if __name__ == "__main__":
