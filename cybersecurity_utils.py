@@ -77,14 +77,14 @@ def setup_google_sheets():
         if not sheet_id or sheet_id == "DEFAULT_SHEET_ID":
             return None
             
-        # Connetti 
+        # Connetti SILENZIOSAMENTE
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id).sheet1
         
         return sheet
         
     except Exception as e:
-        # Errori visibili solo se in debug mode
+        # Errori SILENZIOSI - solo se in debug mode
         if os.getenv("DEBUG_MODE", "").lower() == "true":
             st.error(f"Debug: Errore Google Sheets: {e}")
         return None
@@ -286,209 +286,6 @@ def get_qr_location_options():
         "Altro"
     ]
 
-def is_bot_or_health_check():
-    """
-    Rileva se la richiesta proviene da un bot, health check o sistema automatico
-    
-    Returns:
-        bool: True se è un bot/health check, False se è un utente reale
-    """
-    try:
-        # Ottieni User-Agent dalla richiesta
-        user_agent = st.context.headers.get('user-agent', '').lower()
-        
-        # Ottieni eventuali header di health check
-        referer = st.context.headers.get('referer', '').lower()
-        
-        # Lista di pattern che indicano bot o health check
-        bot_patterns = [
-            'bot', 'crawler', 'spider', 'scraper',
-            'health', 'check', 'monitor', 'ping',
-            'uptime', 'status', 'test', 'probe',
-            'streamlit-cloud', 'streamlit-health',
-            'python-requests', 'curl', 'wget',
-            'axios', 'fetch', 'httpx'
-        ]
-        
-        # Health check endpoint patterns (se accessibili tramite query params o simili)
-        health_check_patterns = [
-            'healthz', 'health-check', 'script-health-check',
-            '_stcore/health', 'ping', 'status'
-        ]
-        
-        # Controlla User-Agent per pattern di bot
-        for pattern in bot_patterns:
-            if pattern in user_agent:
-                return True
-                
-        # Controlla se il referer contiene pattern di health check
-        for pattern in health_check_patterns:
-            if pattern in referer:
-                return True
-        
-        # User-Agent troppo corto o generico (spesso bot)
-        if len(user_agent) < 10:
-            return True
-            
-        # User-Agent vuoto o "Unknown" (il nostro fallback)
-        if user_agent in ['', 'unknown', 'none', '-']:
-            return True
-            
-        # Controlla se User-Agent è troppo semplice (es: solo "python" o "streamlit")
-        simple_patterns = ['python', 'streamlit', 'requests', 'urllib']
-        if any(user_agent.strip() == pattern for pattern in simple_patterns):
-            return True
-            
-        return False
-        
-    except Exception:
-        # Se c'è qualsiasi errore, assumiamo che sia un utente reale
-        return False
-
-
-def is_frequent_visitor():
-    """
-    Rileva accessi troppo frequenti dalla stessa sessione (possibili health check)
-    
-    Returns:
-        bool: True se l'accesso è troppo frequente
-    """
-    try:
-        # Ottieni timestamp corrente
-        current_time = datetime.now()
-        
-        # Controlla se esiste già un timestamp di ultimo accesso
-        if 'last_access_time' in st.session_state:
-            last_access = st.session_state.last_access_time
-            time_diff = (current_time - last_access).total_seconds()
-            
-            # Se l'accesso è avvenuto meno di 2 minuti fa, probabilmente è un health check
-            if time_diff < 120:  # 2 minuti
-                return True
-        
-        # Aggiorna timestamp ultimo accesso
-        st.session_state.last_access_time = current_time
-        return False
-        
-    except Exception:
-        return False
-
-
-def should_track_visit():
-    """
-    Determina se questa visita dovrebbe essere tracciata
-    
-    Returns:
-        bool: True se dovrebbe essere tracciata, False se ignorata
-    """
-    user_agent = st.context.headers.get('user-agent', 'Unknown')
-    
-    # Se User-Agent è 'Unknown', è un health check automatico
-    if user_agent == 'Unknown':
-        return False  # Non tracciare
-        
-    return True  # traccia
-
-
-def track_page_opening():
-    """
-    Versione FILTRATA per tracking apertura pagina - ignora bot e health check
-    
-    Returns:
-        bool: True se è la prima apertura tracciata, False se già tracciata o ignorata
-    """
-    # Controlla se dovremmo tracciare questa visita
-    if not should_track_visit():
-        return False
-        
-    if 'page_tracked' not in st.session_state:
-        st.session_state.page_tracked = True
-        st.session_state.user_data.update({
-            'page_open_timestamp': datetime.now().isoformat(),
-            'status': 'page_opened',
-            'user_agent': st.context.headers.get('user-agent', 'Unknown'),
-            'session_id': st.session_state.session_id
-        })
-        
-        # Salva SILENZIOSAMENTE solo se è un utente reale
-        sheet = setup_google_sheets()
-        if sheet:
-            save_to_google_sheets_fixed(st.session_state.user_data, sheet)
-        
-        return True
-    
-    return False
-
-def save_step_data(step, sheet, **kwargs):
-    """
-    Versione FILTRATA per salvare dati step - ignora bot e health check
-    
-    Args:
-        step (int): Numero step
-        sheet: Google Sheet object  
-        **kwargs: Dati da salvare
-        
-    Returns:
-        bool: True se salvato correttamente
-    """
-    # Non salvare dati se è un bot o health check
-    if not should_track_visit():
-        return True  # Ritorna True per non bloccare l'UI, ma non salva nulla
-        
-    timestamp = datetime.now().isoformat()
-    
-    if step == 1:
-        st.session_state.user_data.update({
-            'qr_location': kwargs.get('qr_location'),
-            'form_started_timestamp': timestamp,
-            'status': 'form_started'
-        })
-    
-    elif step == 2:
-        st.session_state.user_data.update({
-            'age_range': kwargs.get('age_range'),
-            'gender': kwargs.get('gender'),
-            'birth_province': kwargs.get('birth_province'),
-            'education': kwargs.get('education'),
-            'status': 'step2_completed',
-            'step2_timestamp': timestamp
-        })
-    
-    elif step == 3:
-        st.session_state.user_data.update({
-            'status': 'fully_completed',
-            'completion_timestamp': timestamp,
-            'completed': True
-        })
-    
-    # Salva con la nuova funzione FISSA solo se è un utente reale
-    if sheet:
-        return save_to_google_sheets_fixed(st.session_state.user_data, sheet)
-    
-    return True
-
-
-def debug_visit_info():
-    """
-    Funzione DEBUG per vedere informazioni sulla visita corrente
-    Usare solo temporaneamente per verificare il filtro
-    """
-    if os.getenv("DEBUG_MODE", "").lower() == "true":
-        st.write("🔍 **DEBUG VISITA:**")
-        
-        user_agent = st.context.headers.get('user-agent', 'N/A')
-        st.write(f"User-Agent: {user_agent}")
-        
-        is_bot = is_bot_or_health_check()
-        st.write(f"È Bot/Health Check: {is_bot}")
-        
-        is_frequent = is_frequent_visitor()
-        st.write(f"È Accesso Frequente: {is_frequent}")
-        
-        should_track = should_track_visit()
-        st.write(f"Dovrebbe essere tracciato: {should_track}")
-        
-        st.write("---")
 
 def get_age_ranges():
     """
@@ -552,13 +349,142 @@ def initialize_session_state():
         st.session_state.user_data['session_id'] = st.session_state.session_id
 
 
+def log_all_visits():
+    """
+    LOGGER TEMPORANEO - registra TUTTE le visite per trovare il pattern degli health check
+    
+    Aggiunge una riga di log per ogni visita con timestamp preciso per identificare 
+    gli accessi automatici ogni 5 minuti
+    """
+    try:
+        # Ottieni tutti gli header disponibili
+        user_agent = st.context.headers.get('user-agent', 'N/A')
+        referer = st.context.headers.get('referer', 'N/A')
+        host = st.context.headers.get('host', 'N/A')
+        
+        # Timestamp preciso con secondi
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Genera un ID unico per questa visita specifica
+        visit_id = f"visit_{datetime.now().strftime('%H%M%S')}_{hash(str(datetime.now().microsecond))}"
+        
+        # Dati di debug da salvare
+        debug_data = {
+            'visit_id': visit_id,
+            'timestamp': timestamp,
+            'user_agent': user_agent,
+            'referer': referer,
+            'host': host,
+            'session_id': getattr(st.session_state, 'session_id', 'no_session'),
+            'is_page_tracked': 'page_tracked' in st.session_state,
+            'step': getattr(st.session_state, 'step', 'no_step')
+        }
+        
+        # Salva nel Google Sheet con una riga speciale di debug
+        sheet = setup_google_sheets()
+        if sheet:
+            # Riga di debug separata per non rovinare i dati reali
+            debug_row = [
+                f"DEBUG_{visit_id}",  # Session_ID
+                timestamp,            # Timestamp_Apertura
+                "",                   # Timestamp_Inizio_Form
+                "",                   # Timestamp_Step2
+                "",                   # Timestamp_Completamento
+                "",                   # Dove_Trovato_QR
+                "",                   # Fascia_Eta
+                "",                   # Sesso
+                "",                   # Provincia_Nascita
+                "",                   # Titolo_Studio
+                "DEBUG_LOG",          # Status_Finale
+                "No",                 # Completato
+                user_agent,           # User_Agent
+                f"REF:{referer}|HOST:{host}"  # Data_Creazione (usiamo per altri header)
+            ]
+            
+            sheet.append_row(debug_row)
+        
+        return debug_data
+        
+    except Exception as e:
+        # Se c'è errore, almeno mostra in debug mode
+        if os.getenv("DEBUG_MODE", "").lower() == "true":
+            st.error(f"Errore debug logging: {e}")
+        return None
+
+
+def show_detailed_debug():
+    """
+    Mostra DEBUG DETTAGLIATO per ogni visita
+    """
+    if os.getenv("DEBUG_MODE", "").lower() == "true":
+        st.write("🔍 **DEBUG DETTAGLIATO:**")
+        
+        # Log questa visita
+        debug_data = log_all_visits()
+        
+        if debug_data:
+            st.write(f"**Visit ID:** {debug_data['visit_id']}")
+            st.write(f"**Timestamp:** {debug_data['timestamp']}")
+            st.write(f"**User-Agent:** '{debug_data['user_agent']}'")
+            st.write(f"**Referer:** '{debug_data['referer']}'")
+            st.write(f"**Host:** '{debug_data['host']}'")
+            st.write(f"**Session ID:** {debug_data['session_id']}")
+            st.write(f"**Page già tracciata:** {debug_data['is_page_tracked']}")
+            st.write(f"**Step corrente:** {debug_data['step']}")
+        
+        # Analisi automatica per rilevare health check
+        user_agent = debug_data['user_agent'] if debug_data else 'N/A'
+        
+        # Possibili pattern di health check
+        possible_health_check = False
+        reasons = []
+        
+        if user_agent == 'N/A' or user_agent == '':
+            possible_health_check = True
+            reasons.append("User-Agent vuoto")
+            
+        if 'python' in user_agent.lower():
+            possible_health_check = True
+            reasons.append("Contiene 'python'")
+            
+        if 'streamlit' in user_agent.lower():
+            possible_health_check = True
+            reasons.append("Contiene 'streamlit'")
+            
+        if 'health' in user_agent.lower():
+            possible_health_check = True
+            reasons.append("Contiene 'health'")
+            
+        if len(user_agent) < 20 and user_agent != 'N/A':
+            possible_health_check = True
+            reasons.append("User-Agent troppo corto")
+        
+        if possible_health_check:
+            st.error(f"🚨 **POSSIBILE HEALTH CHECK** - Motivi: {', '.join(reasons)}")
+        else:
+            st.success("✅ **PROBABILMENTE UTENTE REALE**")
+            
+        st.write("---")
+        
+        # Istruzioni per analisi
+        st.info("""
+        **📊 Come analizzare:**
+        1. Lascia questa pagina aperta per 10-15 minuti
+        2. Vai nel Google Sheet e ordina per timestamp
+        3. Cerca righe che appaiono ogni ~5 minuti con lo stesso User-Agent
+        4. Quelle sono gli health check automatici!
+        """)
+
+
 def track_page_opening():
     """
-    Versione DISCRETA per tracking apertura pagina - SILENZIOSO
-    
-    Returns:
-        bool: True se è la prima apertura, False se già tracciata
+    Versione con LOGGING DETTAGLIATO per trovare health check
     """
+    # SEMPRE mostra debug se abilitato (anche senza dovrebbe tracciare)
+    show_detailed_debug()
+    
+    # Per ora, traccia TUTTO per raccogliere dati
+    # (Dopo aver trovato il pattern, aggiungeremo il filtro)
     if 'page_tracked' not in st.session_state:
         st.session_state.page_tracked = True
         st.session_state.user_data.update({
@@ -568,7 +494,7 @@ def track_page_opening():
             'session_id': st.session_state.session_id
         })
         
-        # Salva SILENZIOSAMENTE 
+        # Salva SEMPRE per ora (per raccogliere dati)
         sheet = setup_google_sheets()
         if sheet:
             save_to_google_sheets_fixed(st.session_state.user_data, sheet)
@@ -626,7 +552,8 @@ def validate_step_data(step, age_range=None, gender=None, birth_province=None,
 
 def save_step_data(step, sheet, **kwargs):
     """
-    Versione FISSA per salvare dati step - sempre stessa struttura
+    Versione TEMPORANEA - salva TUTTO per raccogliere dati sui pattern
+    (Aggiungeremo il filtro dopo aver trovato il pattern degli health check)
     
     Args:
         step (int): Numero step
@@ -636,6 +563,8 @@ def save_step_data(step, sheet, **kwargs):
     Returns:
         bool: True se salvato correttamente
     """
+    # PER ORA NON FILTRIAMO - raccogliamo tutti i dati per analisi
+    
     timestamp = datetime.now().isoformat()
     
     if step == 1:
@@ -662,7 +591,7 @@ def save_step_data(step, sheet, **kwargs):
             'completed': True
         })
     
-    # Salva con la nuova funzione FISSA
+    # Salva SEMPRE per raccogliere dati completi
     if sheet:
         return save_to_google_sheets_fixed(st.session_state.user_data, sheet)
     
