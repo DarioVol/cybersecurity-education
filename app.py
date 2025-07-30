@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""
-Cybersecurity Education - Streamlit App Main
-App atomica che utilizza le funzioni di cybersecurity_utils.py
-"""
-
 import streamlit as st
 from datetime import datetime
 from cybersecurity_utils import (
@@ -155,7 +150,7 @@ def step_4_educational_disclaimer():
     st.markdown("# ⚠️ ATTENZIONE! SEI STATO TRUFFATO!")
     st.markdown("</div>", unsafe_allow_html=True)
     
-    st.error("**Questo era un esempio di SOCIAL ENGINEERING e PHISHING.**")
+    st.error("**Questo era un esempio di Phising.**")
     st.warning("Non esisteva nessuna promozione. Hai appena fornito i tuoi dati personali a sconosciuti.")
     
     # Mostra dati raccolti
