@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""
-Cybersecurity Utils for Streamlit App
-Contiene tutte le funzioni di utilità per l'applicazione Streamlit
-"""
-
 import streamlit as st
 import pandas as pd
 import json
@@ -138,7 +133,7 @@ def save_to_google_sheets(data, sheet):
             data.get('age_range', ''),
             data.get('gender', ''),
             data.get('birth_province', ''),
-            data.get('residence_province', ''),
+            #data.get('residence_province', ''),
             data.get('education', ''),
             data.get('status', ''),
             data.get('step2_timestamp', ''),
