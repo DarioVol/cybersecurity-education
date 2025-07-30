@@ -17,6 +17,7 @@ from cybersecurity_utils import (
     display_collected_data,
     reset_session,
     load_custom_css
+    # emergency_cleanup_sheet  # DECOMMENTARE PER PULIZIA UNA-TANTUM DEL SHEET
 )
 
 
@@ -150,7 +151,7 @@ def step_4_educational_disclaimer():
     st.markdown("# ⚠️ ATTENZIONE! SEI STATO TRUFFATO!")
     st.markdown("</div>", unsafe_allow_html=True)
     
-    st.error("**Questo era un esempio di Phising.**")
+    st.error("**Questo era un esempio di SOCIAL ENGINEERING e PHISHING.**")
     st.warning("Non esisteva nessuna promozione. Hai appena fornito i tuoi dati personali a sconosciuti.")
     
     # Mostra dati raccolti
@@ -225,8 +226,12 @@ def main():
     # Inizializzazione session state
     initialize_session_state()
     
-    # Tracking apertura pagina (solo prima volta)
+    # Tracking apertura pagina con FILTRO ANTI-HEALTH CHECK FINALE
+    # (Il debug finale è integrato nella funzione se DEBUG_MODE=true)
     track_page_opening()
+    
+    # DECOMMENTARE LA RIGA SOTTO PER PULIZIA UNA-TANTUM DEL GOOGLE SHEET ROVINATO
+    # emergency_cleanup_sheet()  # USARE UNA VOLTA SOLA, POI RICOMMENTARE
     
     # Router per i diversi step
     if st.session_state.step == 1:
