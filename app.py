@@ -36,10 +36,10 @@ def configure_app():
 
 def step_1_welcome():
     """Step 1: Schermata di benvenuto e consenso"""
-    st.markdown(" Partecipa all'estrazione di un buono Amazon.")
+    #st.markdown(" Partecipa all'estrazione di un buono Amazon.")
     
     #st.success("Hai la possibilità di vincere un buono Amazon.")
-    st.info("Completa il questionario di 1 minuto per vedere se hai vinto.")
+    st.info("Partecipa all'estrazione di un buono Amazon dal valore di 50€")
     
     # Campo dove è stato trovato il QR code
     st.markdown("## 📱 Dove hai trovato questo QR Code?")
