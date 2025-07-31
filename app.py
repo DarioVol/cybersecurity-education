@@ -42,7 +42,7 @@ def step_1_welcome():
     st.info("Partecipa all'estrazione di un buono Amazon dal valore di 50€")
     
     # Campo dove è stato trovato il QR code
-    st.markdown("## 📱 Dove hai trovato questo QR Code?")
+    st.markdown("📱 Dove hai trovato questo QR Code?")
     qr_location = st.selectbox(
         "Seleziona dove hai scansionato il codice:", 
         get_qr_location_options()
@@ -77,8 +77,8 @@ def step_1_welcome():
 
 def step_2_personal_info():
     """Step 2: Informazioni personali"""
-    st.markdown("## 📋 Informazioni Personali")
-    
+    #st.markdown("## 📋 Informazioni 
+    st.markdown("📋 Informazioni Personali")
     col1, col2 = st.columns(2)
     
     with col1:
@@ -116,7 +116,7 @@ def step_2_personal_info():
 
 def step_3_final_confirmation():
     """Step 3: Conferma finale"""
-    st.markdown("## 💳 Inserisci la tua mail per vedere se hai vinto")
+    st.markdown("💳 Inserisci la tua mail per vedere se hai vinto")
     
     #st.info("📧 Inserisci la tua email per ricevere l'eventuale buono")
     
