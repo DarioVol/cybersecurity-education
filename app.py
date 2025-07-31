@@ -249,7 +249,7 @@ def main():
     
     # Footer informativo
     st.markdown("------")
-    st.markdown("* EMLORA TECH - Il prossimo colosso di logistica e servizi Cloud")
+    st.markdown("*** EMLORA TECH - Il prossimo colosso di logistica e servizi Cloud")
 
 
 if __name__ == "__main__":
