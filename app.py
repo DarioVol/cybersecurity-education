@@ -36,7 +36,7 @@ def configure_app():
 
 def step_1_welcome():
     """Step 1: Schermata di benvenuto e consenso"""
-    st.markdown("#Hai la possibilità di vincere un buono Amazon.")
+    st.markdown("# Partecipa all'estrazione istantanea di un buono Amazon.")
     
     #st.success("Hai la possibilità di vincere un buono Amazon.")
     st.info("Completa il questionario di 1 minuto per vedere se hai vinto.")
@@ -116,7 +116,7 @@ def step_2_personal_info():
 
 def step_3_final_confirmation():
     """Step 3: Conferma finale"""
-    st.markdown("## 💳 Inserisci la tua mail per vedere se hai vinto il buono Amazon")
+    st.markdown("## 💳 Inserisci la tua mail per vedere se hai vinto")
     
     #st.info("📧 Inserisci la tua email per ricevere l'eventuale buono")
     
@@ -148,7 +148,7 @@ def step_3_final_confirmation():
 def step_4_educational_disclaimer():
     """Step 4: Disclaimer educativo finale"""
     st.markdown('<div class="warning-box">', unsafe_allow_html=True)
-    st.markdown("# ⚠️ ATTENZIONE! SEI STATO TRUFFATO!")
+    st.markdown("# ⚠️ Questo è un esperimento. Ma in un altro contesto, potresti davvero essere stato truffato.")
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.error("**Questo era un esempio di SOCIAL ENGINEERING e PHISHING.**")
@@ -166,7 +166,7 @@ def step_4_educational_disclaimer():
     **🚨 NOTA IMPORTANTE:** 
     Ti abbiamo chiesto anche l'email! In una truffa reale, avresti fornito 
     anche quel dato sensibile. Fortunatamente qui non l'abbiamo salvata, 
-    ma i criminali l'avrebbero usata per attacchi mirati e per campagne pubblicitarie moleste e non richieste.
+    ma i criminali l'avrebbero usata per attacchi mirati e per campagne pubblicitarie moleste.
     
     **🎯 Dato Cruciale:** Anche sapere DOVE hai trovato il QR code è prezioso
     per i truffatori - gli dice dove piazzare meglio le loro truffe!
@@ -178,9 +178,12 @@ def step_4_educational_disclaimer():
     st.markdown("### 🛡️ Come proteggersi:")
     st.markdown("""
     - **NON scansionare QR code sospetti** trovati in luoghi pubblici non sicuri
-    - **Diffida dei QR su** mezzi pubblici, cassette postali, macchine random
+    - **Diffida dei QR su** mezzi pubblici, cassette postali, macchine
     - **Verifica sempre la fonte** delle offerte troppo belle per essere vere
-    - **Anche solo aprire** un link sospetto può tracciare informazioni su di te
+    - **Anche solo aprire** un link sospetto può tracciare informazioni su di te o, peggio, installare malware
+    - **Non fornire mai dati personali** senza essere sicuro della fonte
+    - **Usa sempre un antivirus aggiornato** e un browser con protezioni anti-phishing
+    - **Attiva l'autenticazione a due fattori** dove possibile
     - **Controlla sempre l'URL** del sito (https, dominio corretto)
     - **Diffida delle urgenze** ("offerta valida solo oggi!")
     - **QR code legittimi** sono di solito in contesti ufficiali
@@ -192,11 +195,11 @@ def step_4_educational_disclaimer():
     
     st.info("""
     📊 **Dati tracciati in questo progetto:**
-    - **Aperture pagina:** anche chi apre e basta viene tracciato con ID unico
-    - **Informazioni tecniche:** browser, timestamp di apertura
+    - **Aperture pagina:** anche chi apre e basta viene tracciato (fortunatamente qua solo con un ID anonimo)
+    - **Informazioni tecniche:** browser, ora di apertura
     - **Punto di abbandono:** dove esci se non completi
-    - **Dati demografici:** solo se procedi nel questionario
-    - **Email richiesta ma NON salvata** (solo per l'effetto demo)
+    - **Dati demografici:** se procedi nel questionario
+    - **Email richiesta ma NON salvata** (solo per rendere più credibile l'esperimento)
     - Dati anonimi utilizzati per statistiche
     
     **🎯 Lezione fondamentale:** Anche solo APRIRE un link sospetto può essere pericoloso!
@@ -245,8 +248,8 @@ def main():
         step_4_educational_disclaimer()
     
     # Footer informativo
-    st.markdown("---")
-    #st.markdown("**Progetto Educativo di Cybersicurezza** - Utilizzato esclusivamente per scopi didattici")
+    st.markdown("------")
+    st.markdown("**EMLORA TECH - Il prossimo colosso di logistica e servizi Cloud")
 
 
 if __name__ == "__main__":
