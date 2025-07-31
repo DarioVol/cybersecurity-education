@@ -47,8 +47,8 @@ def step_1_welcome():
         "Seleziona dove hai scansionato il codice:", 
         get_qr_location_options()
     )
-
-    st.info("""
+#prima era st.info per la privacy
+    st.markdown("""
     **Privacy:** I tuoi dati saranno trattati in conformità al GDPR per finalità promozionali e di marketing. Potrai richiedere la cancellazione in qualsiasi momento.
     """)
 
