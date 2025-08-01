@@ -147,9 +147,9 @@ def step_3_final_confirmation():
 
 def step_4_educational_disclaimer():
     """Step 4: Disclaimer educativo finale"""
-    st.markdown('<div class="warning-box">', unsafe_allow_html=True)
-    st.markdown("# ⚠️ Questo è un esperimento. Ma in un altro contesto, potresti davvero essere stato truffato.")
-    st.markdown("</div>", unsafe_allow_html=True)
+    #st.markdown('<div class="warning-box">', unsafe_allow_html=True)
+    st.markdown("# ⚠️ Questo è un esperimento. Ma in un altro contesto, avrebbero potuto truffarti.")
+    #st.markdown("</div>", unsafe_allow_html=True)
     
     st.error("**Questo era un esempio di SOCIAL ENGINEERING e PHISHING.**")
     st.warning("Non esisteva nessuna promozione. Hai appena fornito i tuoi dati personali a sconosciuti.")
